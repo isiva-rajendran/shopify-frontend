@@ -7,6 +7,13 @@ import { LoginForm } from "@/components/login-form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function AuthPage() {
+  const [activeTab, setActiveTab] = useState("login")
+
+  // Callback to switch to login tab
+  const handleSignupSuccess = () => {
+    setActiveTab("login")
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -20,7 +27,7 @@ export default function AuthPage() {
         </div>
         
         <Card className="w-full">
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs  value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -46,7 +53,7 @@ export default function AuthPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <SignupForm />
+                <SignupForm onSignupSuccess={handleSignupSuccess} />
               </CardContent>
             </TabsContent>
           </Tabs>

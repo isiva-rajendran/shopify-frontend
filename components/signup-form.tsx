@@ -10,11 +10,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from 'lucide-react'
 import { signupCustomer } from "@/app/actions/auth"
 
-export function SignupForm() {
+export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
-  const router = useRouter()
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -27,7 +26,7 @@ export function SignupForm() {
         setSuccess(true)
         // Redirect to login tab or dashboard after successful signup
         setTimeout(() => {
-          router.push("/auth?tab=login")
+          onSignupSuccess()
         }, 2000)
       } else {
         setError(result.error || "Failed to create account")

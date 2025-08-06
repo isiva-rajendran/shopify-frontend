@@ -183,5 +183,7 @@ export async function loginCustomer(formData: FormData) {
 export async function logoutCustomer() {
   const cookieStore = await cookies()
   cookieStore.delete("shopify_access_token")
-  redirect("/auth")
+  return {
+      success: true,
+    }
 }

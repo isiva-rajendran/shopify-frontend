@@ -23,7 +23,8 @@ export function LoginForm() {
       
       if (result.success) {
         // Redirect to dashboard or home page after successful login
-        router.push("/dashboard")
+        router.push("/")
+        // router.refresh() // Force refresh to update server component state
       } else {
         setError(result.error || "Failed to sign in")
       }

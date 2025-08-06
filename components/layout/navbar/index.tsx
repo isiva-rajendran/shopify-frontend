@@ -7,14 +7,13 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search, { SearchSkeleton } from './search';
-import { Button } from '@/components/ui/button';
+import AuthButtons from "@/components/auth-buttons";
 
 const { SITE_NAME } = process.env;
 
 export async function Navbar() {
   const cookieStore = await cookies()
-  const accessToken = cookieStore.get("shopify_access_token")
-
+  const accessToken = await cookieStore.get('shopify_access_token')?.value;
   const menu = await getMenu('next-js-frontend-header-menu');
 
   return (
@@ -57,12 +56,9 @@ export async function Navbar() {
             <Search />
           </Suspense>
         </div>
-        <div className="flex justify-end md:w-1/3 items-center space-x-1  xl:space-x-4">
-           <div><CartModal /></div>
-            <Button>
-                {accessToken ? "Log Out" : "Login"}
-            </Button>
-        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <AuthButtons initialAccessToken={accessToken} />
+        </Suspense>
       </div>
     </nav>
   );
