@@ -180,9 +180,122 @@ export async function loginCustomer(formData: FormData) {
   }
 }
 
+export async function forgotPassword(formData: FormData) {
+  const email = formData.get("email") as string
+
+  const mutation = `
+    mutation customerRecover($email: String!) {
+      customerRecover(email: $email) {
+        customerUserErrors {
+          field
+          message
+          code
+        }
+      }
+    }
+  `
+
+  const variables = {
+    email
+  }
+
+  try {
+    const result = await makeShopifyRequest(mutation, variables)
+
+    if (result.errors) {
+      return {
+        success: false,
+        // error: result.errors[0].message
+      }
+    }
+
+    const { customerRecover } = result.data
+    
+    if (customerRecover.customerUserErrors.length > 0) {
+      const error = customerRecover.customerUserErrors[0]
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+
+    return {
+      success: true,
+      message: "Password reset email sent successfully"
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: "Failed to send reset email. Please try again."
+    }
+  }
+}
+
+export async function resetPassword(resetToken: string, newPassword: string) {
+  const mutation = `
+    mutation customerReset($id: ID!, $input: CustomerResetInput!) {
+      customerReset(id: $id, input: $input) {
+        customer {
+          id
+          email
+        }
+        customerAccessToken {
+          accessToken
+          expiresAt
+        }
+        customerUserErrors {
+          field
+          message
+          code
+        }
+      }
+    }
+  `
+
+  const variables = {
+    id: resetToken,
+    input: {
+      password: newPassword,
+      resetToken: resetToken
+    }
+  }
+
+  try {
+    const result = await makeShopifyRequest(mutation, variables)
+
+    if (result.errors) {
+      return {
+        success: false,
+        // error: result.errors[0].message
+      }
+    }
+
+    const { customerReset } = result.data
+    
+    if (customerReset.customerUserErrors.length > 0) {
+      const error = customerReset.customerUserErrors[0]
+      return {
+        success: false,
+        error: error.message || "Invalid or expired reset token"
+      }
+    }
+
+    return {
+      success: true,
+      customer: customerReset.customer
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: "Failed to reset password. Please try again."
+    }
+  }
+}
+
 export async function logoutCustomer() {
   const cookieStore = await cookies()
   cookieStore.delete("shopify_access_token")
+  redirect("/auth")
   return {
       success: true,
     }

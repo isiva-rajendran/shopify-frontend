@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from 'lucide-react'
 import { loginCustomer } from "@/app/actions/auth"
+import Link from "next/link"
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -32,6 +33,7 @@ export function LoginForm() {
       setError("An unexpected error occurred")
     } finally {
       setIsLoading(false)
+      router.refresh()
     }
   }
 
@@ -79,9 +81,11 @@ export function LoginForm() {
       </Button>
       
       <div className="text-center">
-        <Button variant="link" className="text-sm">
-          Forgot your password?
-        </Button>
+        <Link href="/auth/forgot-password" className="text-center">
+          <Button variant="link" className="text-sm">
+            Forgot your password?
+          </Button>
+        </Link>
       </div>
     </form>
   )

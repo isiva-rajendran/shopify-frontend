@@ -10,9 +10,7 @@ import Cookies from "js-cookie";
 
 export default function AuthButtons({ initialAccessToken }: { initialAccessToken?: string }) {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(!!initialAccessToken);
-  console.log("🚀 ~ AuthButtons ~ isLoggedIn:", isLoggedIn)
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(!!initialAccessToken);  
   
   // Handle logout by calling an API route to clear the cookie
   const handleLogout = async () => {
