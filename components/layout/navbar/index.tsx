@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
 import { getMenu } from 'lib/shopify';
@@ -6,14 +7,18 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search, { SearchSkeleton } from './search';
+import { Button } from '@/components/ui/button';
 
 const { SITE_NAME } = process.env;
 
 export async function Navbar() {
+  const cookieStore = await cookies()
+  const accessToken = cookieStore.get("shopify_access_token")
+
   const menu = await getMenu('next-js-frontend-header-menu');
 
   return (
-    <nav className="relative flex items-center justify-between p-4 lg:px-6">
+    <nav className="relative flex items-center justify-between p-4 px-2 lg:px-6">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
           <MobileMenu menu={menu} />
@@ -52,8 +57,11 @@ export async function Navbar() {
             <Search />
           </Suspense>
         </div>
-        <div className="flex justify-end md:w-1/3">
-          <CartModal />
+        <div className="flex justify-end md:w-1/3 items-center space-x-1  xl:space-x-4">
+           <div><CartModal /></div>
+            <Button>
+                {accessToken ? "Log Out" : "Login"}
+            </Button>
         </div>
       </div>
     </nav>
