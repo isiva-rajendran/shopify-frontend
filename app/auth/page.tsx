@@ -52,9 +52,6 @@ export default function AuthPage() {
             <TabsContent value="login" className="p-6">
               <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl font-semibold">Sign In</CardTitle>
-                <CardDescription className="text-gray-500">
-                  Enter your email and password to access your account
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <LoginForm />
@@ -64,9 +61,6 @@ export default function AuthPage() {
             <TabsContent value="signup" className="p-6">
               <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl font-semibold">Create Account</CardTitle>
-                <CardDescription className="text-gray-500">
-                  Fill in your details to create a new account
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <SignupForm onSignupSuccess={handleSignupSuccess} />
