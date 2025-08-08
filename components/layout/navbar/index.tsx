@@ -15,7 +15,7 @@ export async function Navbar() {
   const customer = await getCustomer();
   const isCustomerLogin = customer ? true : false;
   return (
-    <nav className="relative flex items-center justify-between border-b border-neutral-200 p-3 px-2 lg:px-4">
+    <nav className="sticky top-0 z-50 bg-slate-100 flex items-center justify-between border-b border-neutral-200 p-3 px-2 lg:px-4">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
           <MobileMenu menu={menu} />

@@ -15,9 +15,12 @@ export default function OpenCart({
       />
 
       {quantity ? (
-        <div className="absolute right-0 top-0 -mr-2 -mt-2 h-4 w-4 rounded-sm bg-blue-600 text-[11px] font-medium text-white">
-          {quantity}
-        </div>
+        <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-5 w-5 items-center justify-center">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75"></span>
+          <span className="relative inline-flex items-center justify-center h-5 w-5 rounded-full bg-sky-500 text-[12px] text-white">
+            {quantity}
+          </span>
+        </span>
       ) : null}
     </div>
   );

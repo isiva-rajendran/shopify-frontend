@@ -16,12 +16,13 @@ export default async function HomePage() {
   return (
     <>
       <ThreeItemGrid />
+      <Carousel />
         {products.length > 0 ? (
-              <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 p-6">
                 <ProductGridItems products={products} />
               </Grid>
             ) : null}
-      <Carousel />
+      
       <Footer />
     </>
   );

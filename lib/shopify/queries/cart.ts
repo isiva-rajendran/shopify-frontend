@@ -72,7 +72,6 @@ export async function associateCustomerWithCart(
   });
 
   const result = res.body.data?.cartBuyerIdentityUpdate;
-  console.log("🚀 ~ associateCustomerWithCart ~ result:", result)
   
   const succeeded = 
     !result?.userErrors?.length || 
