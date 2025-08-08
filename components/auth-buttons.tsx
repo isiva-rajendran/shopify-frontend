@@ -8,10 +8,8 @@ import { logoutCustomer } from '@/app/actions/auth';
 import Cookies from "js-cookie";
 
 
-export default function AuthButtons({ initialAccessToken }: { initialAccessToken?: string }) {
+export default function AuthButtons({ isCustomerLogin }: { isCustomerLogin: boolean }) {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(!!initialAccessToken);  
-  
   // Handle logout by calling an API route to clear the cookie
   const handleLogout = async () => {
         try {
@@ -20,7 +18,6 @@ export default function AuthButtons({ initialAccessToken }: { initialAccessToken
           if (result.success) {
             // Redirect to dashboard or home page after successful login
             router.push("/")
-            setIsLoggedIn(false);
           } 
         } catch (err) {
             console.error("Logout failed:", err);
@@ -36,7 +33,7 @@ export default function AuthButtons({ initialAccessToken }: { initialAccessToken
   return (
     <div className="flex justify-end md:w-1/3 items-center space-x-1  xl:space-x-4">
       <CartModal />
-      {isLoggedIn ? (
+      {isCustomerLogin ? (
         <Button onClick={handleLogout}>Log Out</Button>
       ) : (
         <Button onClick={handleLogin}>Log In</Button>

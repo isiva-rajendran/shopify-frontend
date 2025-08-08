@@ -1,7 +1,5 @@
-import { cookies } from "next/headers"
-import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
-import { getMenu } from 'lib/shopify';
+import { getCustomer, getMenu } from 'lib/shopify';
 import { Menu } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -9,15 +7,15 @@ import MobileMenu from './mobile-menu';
 import Search, { SearchSkeleton } from './search';
 import AuthButtons from "@/components/auth-buttons";
 
+
 const { SITE_NAME } = process.env;
 
 export async function Navbar() {
-  const cookieStore = await cookies()
-  const accessToken = await cookieStore.get('shopify_access_token')?.value;
   const menu = await getMenu('next-js-frontend-header-menu');
-
+  const customer = await getCustomer();
+  const isCustomerLogin = customer ? true : false;
   return (
-    <nav className="relative flex items-center justify-between p-4 px-2 lg:px-6">
+    <nav className="relative flex items-center justify-between border-b border-neutral-200 p-3 px-2 lg:px-4">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
           <MobileMenu menu={menu} />
@@ -57,7 +55,7 @@ export async function Navbar() {
           </Suspense>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <AuthButtons initialAccessToken={accessToken} />
+          <AuthButtons isCustomerLogin={isCustomerLogin} />
         </Suspense>
       </div>
     </nav>
