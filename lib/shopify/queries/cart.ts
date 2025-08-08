@@ -10,58 +10,6 @@ export const getCartQuery = /* GraphQL */ `
   ${cartFragment}
 `;
 
-// export const getCartQuery = /* GraphQL */ `
-//   query getCart($cartId: ID!, $customerAccessToken: String) {
-//     cart(id: $cartId) {
-//       ...cart
-//     }
-//     customer(customerAccessToken: $customerAccessToken) {
-//       id
-//       firstName
-//       lastName
-//       email
-//       defaultAddress {
-//         id
-//         address1
-//         city
-//         province
-//         country
-//         zip
-//       }
-//     }
-//   }
-//   ${cartFragment}
-// `;
-
-export const CART_BUYER_IDENTITY_UPDATE_MUTATION = /* GraphQL */ `
-  mutation CartBuyerIdentityUpdate(
-    $cartId: ID!
-    $customerAccessToken: String!
-  ) {
-    cartBuyerIdentityUpdate(
-      cartId: $cartId
-      buyerIdentity: {
-        customerAccessToken: $customerAccessToken
-      }
-    ) {
-      cart {
-        id
-        checkoutUrl
-        buyerIdentity {
-          email
-          customer {
-            id
-          }
-        }
-      }
-      userErrors {
-        field
-        message
-      }
-    }
-  }
-`;
-
 interface CartBuyerIdentityUpdateVariables {
   cartId: string;
   customerAccessToken: string;
