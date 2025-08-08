@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
 import { resetPassword } from "@/app/actions/auth"
+import { motion } from "framer-motion" // Added for animations
 
 export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -69,41 +70,48 @@ export default function ResetPasswordPage() {
 
   if (!token && !error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full space-y-8"
+      >
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-4xl font-bold tracking-tight text-gray-900">
             Reset Your Password
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-3 text-base text-gray-500">
             Enter your new password below
           </p>
         </div>
         
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>New Password</CardTitle>
-            <CardDescription>
+        <Card className="w-full shadow-lg rounded-xl border border-gray-200">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-semibold">New Password</CardTitle>
+            <CardDescription className="text-gray-500">
               Choose a strong password for your account
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {success ? (
               <div className="space-y-4 text-center">
                 <div className="flex justify-center">
-                  <CheckCircle className="h-12 w-12 text-green-500" />
+                  <div className="rounded-full bg-green-100 p-3">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  </div>
                 </div>
-                <Alert className="border-green-200 bg-green-50">
+                <Alert className="border-green-300 bg-green-50 rounded-lg">
                   <AlertDescription className="text-green-800">
                     Password reset successfully! Redirecting to login...
                   </AlertDescription>
@@ -112,28 +120,37 @@ export default function ResetPasswordPage() {
             ) : error && !token ? (
               <div className="space-y-4 text-center">
                 <div className="flex justify-center">
-                  <AlertCircle className="h-12 w-12 text-red-500" />
+                  <div className="rounded-full bg-red-100 p-3">
+                    <AlertCircle className="h-8 w-8 text-red-600" />
+                  </div>
                 </div>
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="rounded-lg">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
-                <Button 
-                  onClick={() => router.push("/auth")}
-                  className="w-full"
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Back to Login
-                </Button>
+                  <Button 
+                    onClick={() => router.push("/auth")}
+                    className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+                  >
+                    Back to Login
+                  </Button>
+                </motion.div>
               </div>
             ) : (
-              <form action={handleSubmit} className="space-y-4">
+              <form action={handleSubmit} className="space-y-6">
                 {error && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" className="rounded-lg">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
                 
-                <div className="space-y-2">
-                  <Label htmlFor="password">New Password</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    New Password
+                  </Label>
                   <Input
                     id="password"
                     name="password"
@@ -142,11 +159,14 @@ export default function ResetPasswordPage() {
                     placeholder="Enter new password"
                     disabled={isLoading}
                     minLength={6}
+                    className="h-11 rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                    Confirm Password
+                  </Label>
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -155,6 +175,7 @@ export default function ResetPasswordPage() {
                     placeholder="Confirm new password"
                     disabled={isLoading}
                     minLength={6}
+                    className="h-11 rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 
@@ -165,22 +186,31 @@ export default function ResetPasswordPage() {
                   </ul>
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Resetting Password...
-                    </>
-                  ) : (
-                    "Reset Password"
-                  )}
-                </Button>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    type="submit"
+                    className="w-full h-11 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Resetting Password...
+                      </>
+                    ) : (
+                      "Reset Password"
+                    )}
+                  </Button>
+                </motion.div>
                 
                 <div className="text-center">
                   <Button 
                     variant="link" 
                     onClick={() => router.push("/auth")}
-                    className="text-sm"
+                    className="text-sm text-blue-600 hover:text-blue-800"
                   >
                     Back to Login
                   </Button>
@@ -189,7 +219,7 @@ export default function ResetPasswordPage() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   )
 }

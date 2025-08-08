@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from 'lucide-react'
+import { Loader2 } from "lucide-react"
 import { signupCustomer } from "@/app/actions/auth"
+import { motion } from "framer-motion" // Added for animations
 
 export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void }) {
   const [isLoading, setIsLoading] = useState(false)
@@ -24,7 +25,6 @@ export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void })
       
       if (result.success) {
         setSuccess(true)
-        // Redirect to login tab or dashboard after successful signup
         setTimeout(() => {
           onSignupSuccess()
         }, 2000)
@@ -40,8 +40,8 @@ export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void })
 
   if (success) {
     return (
-      <Alert className="border-green-200 bg-green-50">
-        <AlertDescription className="text-green-800">
+      <Alert className="border-green-300 bg-green-50 rounded-lg">
+        <AlertDescription className="text-green-800 text-center">
           Account created successfully! Redirecting to login...
         </AlertDescription>
       </Alert>
@@ -49,16 +49,18 @@ export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void })
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form action={handleSubmit} className="space-y-6">
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="rounded-lg">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">First Name</Label>
+        <div className="space-y-3">
+          <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+            First Name
+          </Label>
           <Input
             id="firstName"
             name="firstName"
@@ -66,10 +68,13 @@ export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void })
             required
             placeholder="John"
             disabled={isLoading}
+            className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
+        <div className="space-y-3">
+          <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+            Last Name
+          </Label>
           <Input
             id="lastName"
             name="lastName"
@@ -77,12 +82,15 @@ export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void })
             required
             placeholder="Doe"
             disabled={isLoading}
+            className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+      <div className="space-y-3">
+        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+          Email
+        </Label>
         <Input
           id="email"
           name="email"
@@ -90,11 +98,14 @@ export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void })
           required
           placeholder="john@example.com"
           disabled={isLoading}
+          className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
         />
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+      <div className="space-y-3">
+        <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+          Password
+        </Label>
         <Input
           id="password"
           name="password"
@@ -102,26 +113,36 @@ export function SignupForm({ onSignupSuccess }: { onSignupSuccess: () => void })
           required
           placeholder="••••••••"
           disabled={isLoading}
+          className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
         />
       </div>
       
       <div className="flex items-center space-x-2">
         <Checkbox id="acceptsMarketing" name="acceptsMarketing" />
-        <Label htmlFor="acceptsMarketing" className="text-sm">
+        <Label htmlFor="acceptsMarketing" className="text-sm text-gray-600">
           I want to receive marketing emails and updates
         </Label>
       </div>
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating Account...
-          </>
-        ) : (
-          "Create Account"
-        )}
-      </Button>
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Button
+          type="submit"
+          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating Account...
+            </>
+          ) : (
+            "Create Account"
+          )}
+        </Button>
+      </motion.div>
     </form>
   )
 }

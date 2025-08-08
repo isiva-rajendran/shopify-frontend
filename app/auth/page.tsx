@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { SignupForm } from "@/components/signup-form"
 import { LoginForm } from "@/components/login-form"
-  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { motion } from "framer-motion" // Added for animations
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login")
@@ -15,28 +16,43 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex  justify-center bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full space-y-8"
+      >
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-4xl font-bold tracking-tight text-gray-900">
             Welcome to Our Store
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your account or create a new one
+          <p className="mt-3 text-base text-gray-500">
+            Sign in to your account or create a new one to start shopping
           </p>
         </div>
-        
-        <Card className="w-full">
-          <Tabs  value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+
+        <Card className="w-full shadow-lg rounded-xl border border-gray-200">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100 h-14 rounded-t-xl">
+              <TabsTrigger
+                value="login"
+                className="py-3 text-base font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                Login
+              </TabsTrigger>
+              <TabsTrigger
+                value="signup"
+                className="py-3 text-base font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                Sign Up
+              </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="login">
-              <CardHeader>
-                <CardTitle>Sign In</CardTitle>
-                <CardDescription>
+
+            <TabsContent value="login" className="p-6">
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl font-semibold">Sign In</CardTitle>
+                <CardDescription className="text-gray-500">
                   Enter your email and password to access your account
                 </CardDescription>
               </CardHeader>
@@ -44,11 +60,11 @@ export default function AuthPage() {
                 <LoginForm />
               </CardContent>
             </TabsContent>
-            
-            <TabsContent value="signup">
-              <CardHeader>
-                <CardTitle>Create Account</CardTitle>
-                <CardDescription>
+
+            <TabsContent value="signup" className="p-6">
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl font-semibold">Create Account</CardTitle>
+                <CardDescription className="text-gray-500">
                   Fill in your details to create a new account
                 </CardDescription>
               </CardHeader>
@@ -58,7 +74,7 @@ export default function AuthPage() {
             </TabsContent>
           </Tabs>
         </Card>
-      </div>
+      </motion.div>
     </div>
   )
 }

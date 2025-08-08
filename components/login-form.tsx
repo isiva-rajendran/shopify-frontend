@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from 'lucide-react'
+import { Loader2 } from "lucide-react"
 import { loginCustomer } from "@/app/actions/auth"
 import Link from "next/link"
+import { motion } from "framer-motion" // Added for button animation
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -23,9 +24,7 @@ export function LoginForm() {
       const result = await loginCustomer(formData)
       
       if (result.success) {
-        // Redirect to dashboard or home page after successful login
         router.push("/")
-        // router.refresh() // Force refresh to update server component state
       } else {
         setError(result.error || "Failed to sign in")
       }
@@ -38,15 +37,17 @@ export function LoginForm() {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form action={handleSubmit} className="space-y-6">
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="rounded-lg">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
-      <div className="space-y-2">
-        <Label htmlFor="loginEmail">Email</Label>
+      <div className="space-y-3">
+        <Label htmlFor="loginEmail" className="text-sm font-medium text-gray-700">
+          Email
+        </Label>
         <Input
           id="loginEmail"
           name="email"
@@ -54,11 +55,14 @@ export function LoginForm() {
           required
           placeholder="john@example.com"
           disabled={isLoading}
+          className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
         />
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="loginPassword">Password</Label>
+      <div className="space-y-3">
+        <Label htmlFor="loginPassword" className="text-sm font-medium text-gray-700">
+          Password
+        </Label>
         <Input
           id="loginPassword"
           name="password"
@@ -66,23 +70,33 @@ export function LoginForm() {
           required
           placeholder="••••••••"
           disabled={isLoading}
+          className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
         />
       </div>
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing In...
-          </>
-        ) : (
-          "Sign In"
-        )}
-      </Button>
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Button
+          type="submit"
+          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Signing In...
+            </>
+          ) : (
+            "Sign In"
+          )}
+        </Button>
+      </motion.div>
       
       <div className="text-center">
-        <Link href="/auth/forgot-password" className="text-center">
-          <Button variant="link" className="text-sm">
+        <Link href="/auth/forgot-password">
+          <Button variant="link" className="text-sm text-blue-600 hover:text-blue-800">
             Forgot your password?
           </Button>
         </Link>
