@@ -1,5 +1,6 @@
 'use server';
 
+import { associateCustomerWithCart } from '@/lib/shopify/queries/cart';
 import { TAGS } from 'lib/constants';
 import {
   addToCart,
@@ -96,8 +97,29 @@ export async function updateItemQuantity(
 }
 
 export async function redirectToCheckout() {
-  let cart = await getCart();
-  redirect(cart!.checkoutUrl);
+  try {
+    // 1. Get current cart
+    const cart = await getCart();
+    if (!cart) throw new Error("No cart found");
+
+    // 2. Get customer token if logged in
+    const customerAccessToken = ( await cookies()).get('shopify_access_token')?.value;
+
+    // 3. Associate customer if logged in
+    let checkoutUrl = cart.checkoutUrl;
+    if (customerAccessToken && cart.id) {
+      const updatedCart = await associateCustomerWithCart(cart.id, customerAccessToken);
+      checkoutUrl = updatedCart.checkoutUrl;
+    }
+
+    // 4. Redirect to checkout
+    redirect(checkoutUrl);
+    
+  } catch (error) {
+    console.error("Checkout redirect failed:", error);
+    // Handle errors (e.g., show toast message)
+    throw error; // Re-throw if you want calling code to handle it
+  }
 }
 
 export async function createCartAndSetCookie() {

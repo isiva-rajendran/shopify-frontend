@@ -19,6 +19,7 @@ import {
   removeFromCartMutation
 } from './mutations/cart';
 import { getCartQuery } from './queries/cart';
+import { getCustomerQuery } from './queries/customer';
 import {
   getCollectionProductsQuery,
   getCollectionQuery,
@@ -281,6 +282,40 @@ export async function getCart(): Promise<Cart | undefined> {
   }
 
   return reshapeCart(res.body.data.cart);
+}
+
+interface Customer {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+interface CustomerResponse {
+  data?: {
+    customer?: Customer;
+  };
+  variables: {
+    customerAccessToken: string;
+  };
+}
+
+export async function getCustomer(): Promise<Customer | null> {
+  const customerAccessToken = (await cookies()).get('shopify_access_token')?.value;
+  
+  if (!customerAccessToken) return null;
+
+  try {
+    const res = await shopifyFetch<CustomerResponse>({
+      query: getCustomerQuery,
+      variables: { customerAccessToken },
+    });
+
+    return res.body.data?.customer || null;
+  } catch (error) {
+    console.error("Failed to fetch customer:", error);
+    return null;
+  }
 }
 
 export async function getCollection(
