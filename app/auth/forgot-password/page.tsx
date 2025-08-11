@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex justify-center bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4 sm:px-6 lg:px-8">
-      {/* <motion.div
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -179,7 +179,7 @@ export default function ForgotPasswordPage() {
             )}
           </CardContent>
         </Card>
-      </motion.div> */}
+      </motion.div>
     </div>
   )
 }

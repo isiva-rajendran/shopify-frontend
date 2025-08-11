@@ -18,7 +18,8 @@ export function GridTileImage({
   };
 } & React.ComponentProps<typeof Image>) {
   return (
-    <div
+    <>
+      <div
       className={clsx(
         'group flex h-full w-full items-center justify-center overflow-hidden rounded-lg border bg-white dark:bg-black',
         {
@@ -28,6 +29,7 @@ export function GridTileImage({
         }
       )}
     >
+
       {props.src ? (
         <Image
           className={clsx('relative h-full w-full object-contain', {
@@ -36,16 +38,20 @@ export function GridTileImage({
           {...props}
         />
       ) : null}
-      {label ? (
+      
+    </div>
+    <div className='border b-1'>
+      <h1> {label ? (
         <Label
           title={label.title}
           amount={label.amount}
           currencyCode={label.currencyCode}
           position={label.position}
         />
-      ) : null}
-      
+      ) : null}</h1>
     </div>
+    </>
+  
     
   );
 }
