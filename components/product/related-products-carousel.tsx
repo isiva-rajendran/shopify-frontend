@@ -55,7 +55,7 @@ export default function RelatedProductsCarousel({ products }: { products: Produc
           {products.map((product) => (
             <li
               key={product.handle}
-              className="aspect-square flex-none w-full min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
+              className="aspect-0 flex-none w-full min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
             >
               <Link
                 className="relative h-full w-full block"

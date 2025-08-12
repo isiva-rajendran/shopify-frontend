@@ -77,8 +77,8 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
                   <GridTileImage
                     alt={image.altText}
                     src={image.src}
-                    width={80}
-                    height={80}
+                    width={180}
+                    height={180}
                     active={isActive}
                   />
                 </button>
