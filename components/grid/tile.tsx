@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import Image from 'next/image';
 import Label from '../label';
 
+// Keep the same implementation as before
 export function GridTileImage({
   isInteractive = true,
   active,
@@ -30,7 +31,6 @@ export function GridTileImage({
           }
         )}
       >
-
         {props.src ? (
           <Image
             className={clsx('relative h-full w-full object-contain', {
@@ -39,12 +39,11 @@ export function GridTileImage({
             {...props}
           />
         ) : null}
-
       </div>
       <div
         className={clsx(
           'bg-white transition-all duration-300 ease-in-out transform origin-bottom',
-          'h-[100px] hover:h-[130px] hover:-translate-y-[30px] hover:bg-white',
+          'h-[100px] group-hover:h-[130px] group-hover:-translate-y-[30px] group-hover:bg-white',
         )}
       >
         {label ? (
@@ -58,6 +57,5 @@ export function GridTileImage({
         ) : null}
       </div>
     </div>
-
   );
 }
