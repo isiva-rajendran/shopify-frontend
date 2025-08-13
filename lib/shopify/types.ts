@@ -270,3 +270,40 @@ export type ShopifyProductsOperation = {
     sortKey?: string;
   };
 };
+
+export interface Customer {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  acceptsMarketing?: boolean;
+  defaultAddress?: Address;
+}
+
+export interface Address {
+  id: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  province?: string;
+  country?: string;
+  zip?: string;
+  company?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}
+
+export interface AddressInput {
+  address1?: string;
+  address2?: string;
+  city?: string;
+  company?: string;
+  country?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  province?: string;
+  zip?: string;
+}

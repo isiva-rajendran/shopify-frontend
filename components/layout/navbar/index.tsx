@@ -13,7 +13,6 @@ const { SITE_NAME } = process.env;
 export async function Navbar() {
   const menu = await getMenu('next-js-frontend-header-menu');
   const customer = await getCustomer();
-  const isCustomerLogin = customer ? true : false;
   return (
     <nav className="sticky top-0 z-50 bg-slate-100 flex items-center justify-between border-b border-neutral-200 p-3 px-2 lg:px-4">
       <div className="block flex-none md:hidden">
@@ -55,7 +54,7 @@ export async function Navbar() {
           </Suspense>
         </div>
         <Suspense fallback={<div>Loading...</div>}>
-          <AuthButtons isCustomerLogin={isCustomerLogin} />
+           <AuthButtons customer={customer} />
         </Suspense>
       </div>
     </nav>

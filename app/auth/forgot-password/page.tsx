@@ -1,22 +1,13 @@
-"use client"
-
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
 import ForgotPasswordForm from "@/components/ForgotPasswordForm"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
-export default function ForgotPasswordPage() {
-  const router = useRouter()
+export default async function AuthPage() {
+  const token = (await cookies()).get("shopify_access_token")?.value
 
-  useEffect(() => {
-    async function checkAuth() {
-      const res = await fetch("/api/auth/status")
-      const data = await res.json()
-      if (data.loggedIn) {
-        router.replace("/")
-      }
-    }
-    checkAuth()
-  }, [router])
+  if (token) {
+    redirect("/")
+  }
 
   return <ForgotPasswordForm />
 }

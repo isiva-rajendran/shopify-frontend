@@ -33,6 +33,8 @@ import {
   getProductsQuery
 } from './queries/product';
 import {
+  Address,
+  AddressInput,
   Cart,
   Collection,
   Connection,

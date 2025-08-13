@@ -11,9 +11,14 @@ export const getCustomerQuery = /* GraphQL */ `
       defaultAddress {
         id
         address1
+        address2
         city
         province
         country
+        company
+        phone
+        firstName
+        lastName
         zip
       }
     }
