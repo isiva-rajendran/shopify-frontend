@@ -14,8 +14,6 @@ export default function AddressForm({ customer }: { customer: Customer }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const customerAccessToken = '4aa26c0a95a07d79dcc625ba21787da0';
-
     const address = customer.defaultAddress || {
         address1: '',
         city: '',
@@ -52,7 +50,7 @@ export default function AddressForm({ customer }: { customer: Customer }) {
         // Ensure customerAccessToken and addressId are available
         const addressId = customer.defaultAddress?.id;
 
-        if (!customerAccessToken || !addressId) {
+        if (!addressId) {
             setErrorMessage('Missing customer access token or address ID');
             setIsSubmitting(false);
             return;

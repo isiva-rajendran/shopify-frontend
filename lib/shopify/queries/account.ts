@@ -105,3 +105,94 @@ export async function updateCustomerAddress(
 
   return { success: true };
 }
+
+
+interface CustomerProfileDetails {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  acceptsMarketing?: boolean;
+}
+
+interface CustomerProfileUpdateResponse {
+  customerUpdate?: {
+    customer?: CustomerProfileDetails;
+    customerUserErrors: Array<{
+      code: string;
+      field: string[];
+      message: string;
+    }>;
+  };
+}
+
+interface CustomerProfileUpdateVariables {
+  customerAccessToken: string;
+  customer: CustomerProfileDetails;
+}
+
+export async function updateCustomerProfile(
+  customerProfileDetails: CustomerProfileDetails
+): Promise<{ success: boolean; errors?: { code: string; field: string; message: string }[] }> {
+  const customerAccessToken = (await cookies()).get('shopify_access_token')?.value;
+
+  if (!customerAccessToken || !customerProfileDetails) {
+    return {
+      success: false,
+      errors: [{ code: 'MISSING_INPUT', field: '', message: 'Missing customer access token or profile details' }],
+    };
+  }
+
+  const res = await shopifyFetch<{
+    variables: CustomerProfileUpdateVariables;
+    data: CustomerProfileUpdateResponse;
+  }>({
+    query: `
+      mutation customerUpdate($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
+        customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
+          customer {
+            id
+            firstName
+            lastName
+            email
+            phone
+            acceptsMarketing
+          }
+          customerUserErrors {
+            code
+            field
+            message
+          }
+        }
+      }
+    `,
+    variables: {
+      customerAccessToken,
+      customer: customerProfileDetails, // Renamed to match mutation argument
+    },
+  });
+
+  const result = res.body.data?.customerUpdate;
+
+  if (!result) {
+    return { success: false, errors: [{ code: 'NO_RESULT', field: '', message: 'Mutation returned no result' }] };
+  }
+
+  if (result.customerUserErrors.length > 0) {
+    console.error('Customer user errors:', result.customerUserErrors);
+    return {
+      success: false,
+      errors: result.customerUserErrors.map(error => ({
+        code: error.code,
+        field: error.field.join('.'),
+        message: error.message,
+      })),
+    };
+  }
+
+  if (!result.customer) {
+    return { success: false, errors: [{ code: 'UNKNOWN', field: '', message: 'Failed to update customer profile' }] };
+  }
+
+  return { success: true };
+}
