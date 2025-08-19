@@ -33,8 +33,6 @@ import {
   getProductsQuery
 } from './queries/product';
 import {
-  Address,
-  AddressInput,
   Cart,
   Collection,
   Connection,
@@ -286,11 +284,31 @@ export async function getCart(): Promise<Cart | undefined> {
   return reshapeCart(res.body.data.cart);
 }
 
+// Define the Address interface
+interface Address {
+  id: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  province?: string;
+  country?: string;
+  company?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  zip?: string;
+}
+
+// Update the Customer interface to include both addresses and defaultAddress
 interface Customer {
   id: string;
   firstName?: string;
   lastName?: string;
   email?: string;
+  phone?: string;
+  acceptsMarketing?: boolean;
+  addresses?: Address[];
+  defaultAddress?: Address;
 }
 
 interface CustomerResponse {

@@ -278,7 +278,13 @@ export interface Customer {
   email?: string;
   phone?: string;
   acceptsMarketing?: boolean;
+  addresses?: AddressConnection;
   defaultAddress?: Address;
+}
+
+// Interface for the addresses connection
+interface AddressConnection {
+  edges: { node: Address }[];
 }
 
 export interface Address {

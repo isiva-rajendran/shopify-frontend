@@ -37,6 +37,8 @@ export async function updateCustomerAddress(
   addressId: string,
   address: AddressInput
 ): Promise<{ success: boolean; errors?: { code: string; field: string; message: string }[] }> {
+  console.log("🚀 ~ updateCustomerAddress ~ addressId:", addressId)
+  console.log("🚀 ~ updateCustomerAddress ~ address:", address)
   const customerAccessToken = (await cookies()).get('shopify_access_token')?.value;
 
   if (!customerAccessToken || !addressId) {
