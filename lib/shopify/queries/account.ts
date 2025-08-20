@@ -198,3 +198,82 @@ export async function updateCustomerProfile(
 
   return { success: true };
 }
+
+interface CustomerDefaultAddressVariables {
+  customerAccessToken: string;
+  addressId: string;
+}
+
+interface CustomerDefaultAddressUpdateResponse {
+  customerDefaultAddressUpdate?: {
+    customer?: {
+      id: string;
+    };
+    customerUserErrors: Array<{
+      code: string;
+      field: string[];
+      message: string;
+    }>;
+  };
+}
+
+export async function setCustomerDefaultAddress(
+  addressId: string
+): Promise<{ success: boolean; errors?: { code: string; field: string; message: string }[] }> {
+  const customerAccessToken = (await cookies()).get('shopify_access_token')?.value;
+
+  if (!customerAccessToken || !addressId) {
+    return {
+      success: false,
+      errors: [{ code: 'MISSING_INPUT', field: '', message: 'Missing customer access token or profile details' }],
+    };
+  }
+
+  const res = await shopifyFetch<{
+    variables: CustomerDefaultAddressVariables;
+    data: CustomerDefaultAddressUpdateResponse;
+  }>({
+    query: `
+      mutation customerDefaultAddressUpdate($customerAccessToken: String!, $addressId: ID!) {
+        customerDefaultAddressUpdate(customerAccessToken: $customerAccessToken, addressId: $addressId) {
+          customer {
+            id
+          }
+          customerUserErrors {
+            code
+            field
+            message
+          }
+        }
+      }
+    `,
+    variables: {
+      customerAccessToken,
+      addressId: addressId, // Renamed to match mutation argument
+    },
+  });
+
+  const result = res.body.data?.customerDefaultAddressUpdate;
+
+  if (!result) {
+    return { success: false, errors: [{ code: 'NO_RESULT', field: '', message: 'Mutation returned no result' }] };
+  }
+
+  if (result.customerUserErrors.length > 0) {
+    console.error('Customer user errors:', result.customerUserErrors);
+    return {
+      success: false,
+      errors: result.customerUserErrors.map(error => ({
+        code: error.code,
+        field: error.field.join('.'),
+        message: error.message,
+      })),
+    };
+  }
+
+  if (!result.customer) {
+    return { success: false, errors: [{ code: 'UNKNOWN', field: '', message: 'Failed to update address' }] };
+  }
+
+  return { success: true };
+}

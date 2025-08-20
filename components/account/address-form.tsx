@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AddressInput, Customer, Address } from '@/lib/shopify/types';
-import { updateCustomerAddress } from '@/lib/shopify/queries/account';
+import { updateCustomerAddress, setCustomerDefaultAddress } from '@/lib/shopify/queries/account';
 import { CheckCircle, AlertCircle, MapPin, Building2, User, Phone, Loader2, Home, Edit, Check } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ function getBaseId(id: string | undefined): string {
 }
 
 export default function AddressesManager({ customer }: { customer: Customer }) {
+    console.log("🚀 ~ AddressesManager ~ customer:", customer)
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -112,16 +113,16 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
         setSuccessMessage(null);
 
         try {
-            // const baseAddressId = addressId;
-            // const result = await setCustomerDefaultAddress(baseAddressId);
+            const baseAddressId = addressId;
+            const result = await setCustomerDefaultAddress(baseAddressId);
 
-            // if (result.success) {
-            //     setSuccessMessage('Address set as default successfully!');
-            //     router.refresh();
-            //     setTimeout(() => setSuccessMessage(null), 5000);
-            // } else {
-            //     setErrorMessage(result.errors?.[0]?.message || 'Failed to set as default');
-            // }
+            if (result.success) {
+                setSuccessMessage('Address set as default successfully!');
+                router.refresh();
+                setTimeout(() => setSuccessMessage(null), 5000);
+            } else {
+                setErrorMessage(result.errors?.[0]?.message || 'Failed to set as default');
+            }
         } catch (error) {
             console.error('Set default failed:', error);
             setErrorMessage('An unexpected error occurred. Please try again.');
