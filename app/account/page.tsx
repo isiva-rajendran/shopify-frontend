@@ -40,9 +40,8 @@ export default async function AccountPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1  gap-8">
           {/* Profile Form - Takes 2 columns on large screens */}
-          <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
                 <div className="flex items-center space-x-3">
@@ -56,11 +55,9 @@ export default async function AccountPage() {
               <div className="p-8">
                 <ProfileForm customer={customer} />
               </div>
-            </div>
           </div>
           
           {/* Address Form - Takes 1 column */}
-          <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden h-fit">
               <div className="bg-gradient-to-r from-green-600 to-teal-600 p-6">
                 <div className="flex items-center space-x-3">
@@ -75,7 +72,6 @@ export default async function AccountPage() {
                 <AddressForm customer={customer} />
               </div>
             </div>
-          </div>
         </div>
 
         {/* Customer Support Footer */}

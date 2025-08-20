@@ -7,10 +7,24 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AddressInput, Customer, Address } from '@/lib/shopify/types';
-import { updateCustomerAddress, setCustomerDefaultAddress } from '@/lib/shopify/queries/account';
-import { CheckCircle, AlertCircle, MapPin, Building2, User, Phone, Loader2, Home, Edit, Check } from 'lucide-react';
+import { updateCustomerAddress, setCustomerDefaultAddress, createCustomerAddress } from '@/lib/shopify/queries/account';
+import {
+    CheckCircle,
+    AlertCircle,
+    MapPin,
+    Building2,
+    User,
+    Phone,
+    Loader2,
+    Home,
+    Edit,
+    Check,
+    X,
+    Plus
+} from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
 // Helper function to extract base ID from Shopify address ID
 function getBaseId(id: string | undefined): string {
@@ -18,12 +32,14 @@ function getBaseId(id: string | undefined): string {
 }
 
 export default function AddressesManager({ customer }: { customer: Customer }) {
-    console.log("🚀 ~ AddressesManager ~ customer:", customer)
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [globalErrorMessage, setGlobalErrorMessage] = useState<string | null>(null);
+    const [globalSuccessMessage, setGlobalSuccessMessage] = useState<string | null>(null);
     const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+    const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+    const [isCreatePopupOpen, setIsCreatePopupOpen] = useState(false);
+    const [popupErrorMessage, setPopupErrorMessage] = useState<string | null>(null);
 
     // Process addresses to handle edges or undefined
     const addresses: Address[] = customer.addresses
@@ -35,11 +51,15 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
     const defaultAddress = customer.defaultAddress;
     const defaultBaseId = getBaseId(defaultAddress?.id);
 
-    // Find default address from the list (to avoid duplicate)
-    const defaultAddr = addresses.find((addr) => getBaseId(addr.id) === defaultBaseId);
+    // Sort addresses: default first, then others
+    const sortedAddresses = addresses.sort((a, b) => {
+        const aIsDefault = getBaseId(a.id) === defaultBaseId;
+        const bIsDefault = getBaseId(b.id) === defaultBaseId;
 
-    // Other addresses (exclude default by base ID)
-    const otherAddresses = addresses.filter((addr) => getBaseId(addr.id) !== defaultBaseId);
+        if (aIsDefault && !bIsDefault) return -1;
+        if (!aIsDefault && bIsDefault) return 1;
+        return 0;
+    });
 
     // Form for editing an address
     const {
@@ -64,6 +84,7 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
 
     // Load form with selected address data for editing
     const startEditing = (addr: Address) => {
+        setPopupErrorMessage(null);
         reset({
             address1: addr.address1 || '',
             address2: addr.address2 || '',
@@ -77,30 +98,91 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
             phone: addr.phone || '',
         });
         setEditingAddressId(addr.id);
+        setIsEditPopupOpen(true);
+    };
+
+    // Open create address popup
+    const openCreatePopup = () => {
+        setPopupErrorMessage(null);
+        reset({
+            address1: '',
+            address2: '',
+            city: '',
+            province: '',
+            country: '',
+            zip: '',
+            company: '',
+            firstName: '',
+            lastName: '',
+            phone: '',
+        });
+        setIsCreatePopupOpen(true);
+    };
+
+    // Close edit popup
+    const closeEditPopup = () => {
+        setIsEditPopupOpen(false);
+        setEditingAddressId(null);
+        setPopupErrorMessage(null);
+        reset();
+    };
+
+    // Close create popup
+    const closeCreatePopup = () => {
+        setIsCreatePopupOpen(false);
+        setPopupErrorMessage(null);
+        reset();
     };
 
     // Submit handler for updating an address
-    const onSubmit = async (data: AddressInput) => {
+    const onSubmitEdit = async (data: AddressInput) => {
         if (!editingAddressId) return;
 
         setIsSubmitting(true);
-        setErrorMessage(null);
-        setSuccessMessage(null);
+        setPopupErrorMessage(null);
+        setGlobalSuccessMessage(null);
+        setGlobalErrorMessage(null);
 
         try {
             const result = await updateCustomerAddress(editingAddressId, data);
 
             if (result.success) {
-                setSuccessMessage('Address updated successfully!');
+                setGlobalSuccessMessage('Address updated successfully!');
                 router.refresh();
-                setEditingAddressId(null);
-                setTimeout(() => setSuccessMessage(null), 5000);
+                closeEditPopup();
+                setTimeout(() => setGlobalSuccessMessage(null), 5000);
             } else {
-                setErrorMessage(result.errors?.[0]?.message || 'Failed to update address');
+                setPopupErrorMessage(result.errors?.[0]?.message || 'Failed to update address');
             }
         } catch (error) {
             console.error('Address update failed:', error);
-            setErrorMessage('An unexpected error occurred. Please try again.');
+            setPopupErrorMessage('An unexpected error occurred. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Submit handler for creating a new address
+    const onSubmitCreate = async (data: AddressInput) => {
+        setIsSubmitting(true);
+        setPopupErrorMessage(null);
+        setGlobalSuccessMessage(null);
+        setGlobalErrorMessage(null);
+
+        try {
+            const result = await createCustomerAddress(data);
+
+            if (result.success) {
+                setGlobalSuccessMessage('Address created successfully!');
+                router.refresh();
+                closeCreatePopup();
+                setTimeout(() => setGlobalSuccessMessage(null), 5000);
+            } else {
+                setPopupErrorMessage(result.errors?.[0]?.message || 'Failed to create address');
+            }
+        } catch (error) {
+            console.error('Address creation failed:', error);
+            setPopupErrorMessage('An unexpected error occurred. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -109,23 +191,23 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
     // Handler for setting an address as default
     const handleSetDefault = async (addressId: string) => {
         setIsSubmitting(true);
-        setErrorMessage(null);
-        setSuccessMessage(null);
+        setGlobalErrorMessage(null);
+        setGlobalSuccessMessage(null);
 
         try {
             const baseAddressId = addressId;
             const result = await setCustomerDefaultAddress(baseAddressId);
 
             if (result.success) {
-                setSuccessMessage('Address set as default successfully!');
+                setGlobalSuccessMessage('Address set as default successfully!');
                 router.refresh();
-                setTimeout(() => setSuccessMessage(null), 5000);
+                setTimeout(() => setGlobalSuccessMessage(null), 5000);
             } else {
-                setErrorMessage(result.errors?.[0]?.message || 'Failed to set as default');
+                setGlobalErrorMessage(result.errors?.[0]?.message || 'Failed to set as default');
             }
         } catch (error) {
             console.error('Set default failed:', error);
-            setErrorMessage('An unexpected error occurred. Please try again.');
+            setGlobalErrorMessage('An unexpected error occurred. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -134,186 +216,664 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
     return (
         <div className="space-y-6">
             {/* Global Messages */}
-            {successMessage && (
+            {globalSuccessMessage && (
                 <div className="flex items-center space-x-3 p-4 bg-green-50 border border-green-200 rounded-xl">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <p className="text-green-700 font-medium">{successMessage}</p>
+                    <p className="text-green-700 font-medium">{globalSuccessMessage}</p>
                 </div>
             )}
-            {errorMessage && (
+            {globalErrorMessage && (
                 <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-xl">
                     <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-red-700 font-medium">{errorMessage}</p>
+                    <p className="text-red-700 font-medium">{globalErrorMessage}</p>
                 </div>
             )}
 
-            {/* Default Address Card */}
+            {/* All Addresses in Grid */}
             <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Default Address</h2>
-                {defaultAddr ? (
-                    <AddressCard
-                        address={defaultAddr}
-                        isDefault={true}
-                        onEdit={() => startEditing(defaultAddr)}
-                        isEditing={editingAddressId === defaultAddr.id}
-                        onSubmit={handleSubmit(onSubmit)}
-                        register={register}
-                        errors={errors}
-                        isDirty={isDirty}
-                        isSubmitting={isSubmitting}
-                    />
-                ) : (
-                    <p className="text-gray-500">No default address set.</p>
+                <h2 className="text-xl font-semibold text-gray-900">My Addresses</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   
+
+                    {sortedAddresses.map((addr) => {
+                        const isDefault = getBaseId(addr.id) === defaultBaseId;
+                        return (
+                            <AddressCard
+                                key={addr.id}
+                                address={addr}
+                                isDefault={isDefault}
+                                onSetDefault={() => handleSetDefault(addr.id)}
+                                onEdit={() => startEditing(addr)}
+                                isSubmitting={isSubmitting}
+                            />
+                        );
+                    })}
+                     {/* Add New Address Card */}
+                    <AddAddressCard onClick={openCreatePopup} />
+                </div>
+                {sortedAddresses.length === 0 && (
+                    <p className="text-gray-500 text-center py-8">No addresses found.</p>
                 )}
             </div>
 
-            {/* Other Addresses */}
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Other Addresses</h2>
-                <div className="grid ">
-                    {otherAddresses.map((addr) => (
-                        <AddressCard
-                            key={addr.id}
-                            address={addr}
-                            isDefault={false}
-                            onSetDefault={() => handleSetDefault(addr.id)}
-                            onEdit={() => startEditing(addr)}
-                            isEditing={editingAddressId === addr.id}
-                            onSubmit={handleSubmit(onSubmit)}
-                            register={register}
-                            errors={errors}
-                            isDirty={isDirty}
-                            isSubmitting={isSubmitting}
-                        />
-                    ))}
-                </div>
-                {otherAddresses.length === 0 && <p className="text-gray-500">No other addresses.</p>}
-            </div>
+            {/* Edit Address Popup */}
+            <Dialog open={isEditPopupOpen} onOpenChange={closeEditPopup}>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+                    <DialogHeader className="pb-6 border-b">
+                        <DialogTitle className="text-xl font-semibold flex items-center space-x-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <Edit className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <span>Edit Address</span>
+                        </DialogTitle>
+                        <DialogClose asChild>
+                            <Button variant="ghost" size="sm" className="absolute right-4 top-4 hover:bg-gray-100">
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </DialogClose>
+                    </DialogHeader>
+
+                    <div className="overflow-y-auto max-h-[60vh] px-1">
+                        {/* Error Message in Popup */}
+                        {popupErrorMessage && (
+                            <div className="flex items-center space-x-3 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg">
+                                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                                <p className="text-red-700 text-sm font-medium">{popupErrorMessage}</p>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit(onSubmitEdit)} className="space-y-6">
+                            {/* Personal Information Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider border-b pb-2">
+                                    Personal Information
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                                            First Name *
+                                        </Label>
+                                        <Input
+                                            id="firstName"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter first name"
+                                            {...register('firstName', { required: 'First name is required' })}
+                                        />
+                                        {errors.firstName && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.firstName.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                                            Last Name *
+                                        </Label>
+                                        <Input
+                                            id="lastName"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter last name"
+                                            {...register('lastName', { required: 'Last name is required' })}
+                                        />
+                                        {errors.lastName && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.lastName.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                                        Phone Number *
+                                    </Label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Input
+                                            id="phone"
+                                            className="h-11 pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter phone number"
+                                            {...register('phone', { required: 'Phone number is required' })}
+                                        />
+                                    </div>
+                                    {errors.phone && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.phone.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="company" className="text-sm font-medium text-gray-700">
+                                        Company
+                                    </Label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Input
+                                            id="company"
+                                            className="h-11 pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter company name (optional)"
+                                            {...register('company')}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Address Information Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider border-b pb-2">
+                                    Address Information
+                                </h3>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="address1" className="text-sm font-medium text-gray-700">
+                                        Street Address *
+                                    </Label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Input
+                                            id="address1"
+                                            className="h-11 pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter street address"
+                                            {...register('address1', { required: 'Street address is required' })}
+                                        />
+                                    </div>
+                                    {errors.address1 && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.address1.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="address2" className="text-sm font-medium text-gray-700">
+                                        Apartment, Suite, etc.
+                                    </Label>
+                                    <Input
+                                        id="address2"
+                                        className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Apartment, suite, unit, building, floor, etc."
+                                        {...register('address2')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="city" className="text-sm font-medium text-gray-700">
+                                        City *
+                                    </Label>
+                                    <Input
+                                        id="city"
+                                        className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Enter city"
+                                        {...register('city', { required: 'City is required' })}
+                                    />
+                                    {errors.city && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.city.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="province" className="text-sm font-medium text-gray-700">
+                                            State/Province *
+                                        </Label>
+                                        <Input
+                                            id="province"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter state/province"
+                                            {...register('province', { required: 'State/Province is required' })}
+                                        />
+                                        {errors.province && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.province.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="zip" className="text-sm font-medium text-gray-700">
+                                            Postal Code *
+                                        </Label>
+                                        <Input
+                                            id="zip"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter postal code"
+                                            {...register('zip', { required: 'Postal code is required' })}
+                                        />
+                                        {errors.zip && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.zip.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="country" className="text-sm font-medium text-gray-700">
+                                        Country *
+                                    </Label>
+                                    <Input
+                                        id="country"
+                                        className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Enter country"
+                                        {...register('country', { required: 'Country is required' })}
+                                    />
+                                    {errors.country && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.country.message}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Fixed Footer with Buttons */}
+                    <div className="border-t bg-gray-50 px-6 py-4 -mx-6 -mb-6 mt-6">
+                        <div className="flex space-x-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={closeEditPopup}
+                                className="flex-1 h-11 border-gray-300 hover:bg-gray-50"
+                                disabled={isSubmitting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSubmit(onSubmitEdit)}
+                                disabled={isSubmitting || !isDirty}
+                                className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Check className="w-4 h-4 mr-2" />
+                                        Save Changes
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Create Address Popup */}
+            <Dialog open={isCreatePopupOpen} onOpenChange={closeCreatePopup}>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+                    <DialogHeader className="pb-6 border-b">
+                        <DialogTitle className="text-xl font-semibold flex items-center space-x-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <Plus className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <span>Add New Address</span>
+                        </DialogTitle>
+                        <DialogClose asChild>
+                            <Button variant="ghost" size="sm" className="absolute right-4 top-4 hover:bg-gray-100">
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </DialogClose>
+                    </DialogHeader>
+
+                    <div className="overflow-y-auto max-h-[60vh] px-1">
+                        {/* Error Message in Popup */}
+                        {popupErrorMessage && (
+                            <div className="flex items-center space-x-3 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg">
+                                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                                <p className="text-red-700 text-sm font-medium">{popupErrorMessage}</p>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit(onSubmitCreate)} className="space-y-6">
+                            {/* Personal Information Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider border-b pb-2">
+                                    Personal Information
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="create-firstName" className="text-sm font-medium text-gray-700">
+                                            First Name *
+                                        </Label>
+                                        <Input
+                                            id="create-firstName"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter first name"
+                                            {...register('firstName', { required: 'First name is required' })}
+                                        />
+                                        {errors.firstName && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.firstName.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="create-lastName" className="text-sm font-medium text-gray-700">
+                                            Last Name *
+                                        </Label>
+                                        <Input
+                                            id="create-lastName"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter last name"
+                                            {...register('lastName', { required: 'Last name is required' })}
+                                        />
+                                        {errors.lastName && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.lastName.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="create-phone" className="text-sm font-medium text-gray-700">
+                                        Phone Number *
+                                    </Label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Input
+                                            id="create-phone"
+                                            className="h-11 pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter phone number"
+                                            {...register('phone', { required: 'Phone number is required' })}
+                                        />
+                                    </div>
+                                    {errors.phone && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.phone.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="create-company" className="text-sm font-medium text-gray-700">
+                                        Company
+                                    </Label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Input
+                                            id="create-company"
+                                            className="h-11 pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter company name (optional)"
+                                            {...register('company')}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Address Information Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider border-b pb-2">
+                                    Address Information
+                                </h3>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="create-address1" className="text-sm font-medium text-gray-700">
+                                        Street Address *
+                                    </Label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <Input
+                                            id="create-address1"
+                                            className="h-11 pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter street address"
+                                            {...register('address1', { required: 'Street address is required' })}
+                                        />
+                                    </div>
+                                    {errors.address1 && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.address1.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="create-address2" className="text-sm font-medium text-gray-700">
+                                        Apartment, Suite, etc.
+                                    </Label>
+                                    <Input
+                                        id="create-address2"
+                                        className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Apartment, suite, unit, building, floor, etc."
+                                        {...register('address2')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="create-city" className="text-sm font-medium text-gray-700">
+                                        City *
+                                    </Label>
+                                    <Input
+                                        id="create-city"
+                                        className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Enter city"
+                                        {...register('city', { required: 'City is required' })}
+                                    />
+                                    {errors.city && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.city.message}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="create-province" className="text-sm font-medium text-gray-700">
+                                            State/Province *
+                                        </Label>
+                                        <Input
+                                            id="create-province"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter state/province"
+                                            {...register('province', { required: 'State/Province is required' })}
+                                        />
+                                        {errors.province && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.province.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="create-zip" className="text-sm font-medium text-gray-700">
+                                            Postal Code *
+                                        </Label>
+                                        <Input
+                                            id="create-zip"
+                                            className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                            placeholder="Enter postal code"
+                                            {...register('zip', { required: 'Postal code is required' })}
+                                        />
+                                        {errors.zip && (
+                                            <p className="text-red-500 text-xs mt-1 flex items-center">
+                                                <AlertCircle className="w-3 h-3 mr-1" />
+                                                {errors.zip.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="create-country" className="text-sm font-medium text-gray-700">
+                                        Country *
+                                    </Label>
+                                    <Input
+                                        id="create-country"
+                                        className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Enter country"
+                                        {...register('country', { required: 'Country is required' })}
+                                    />
+                                    {errors.country && (
+                                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                                            <AlertCircle className="w-3 h-3 mr-1" />
+                                            {errors.country.message}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Fixed Footer with Buttons */}
+                    <div className="border-t bg-gray-50 px-6 py-4 -mx-6 -mb-6 mt-6">
+                        <div className="flex space-x-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={closeCreatePopup}
+                                className="flex-1 h-11 border-gray-300 hover:bg-gray-50"
+                                disabled={isSubmitting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSubmit(onSubmitCreate)}
+                                disabled={isSubmitting}
+                                className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                        Creating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Create Address
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
 
-// AddressCard Component (unchanged from previous)
+// Add Address Card Component
+function AddAddressCard({ onClick }: { onClick: () => void }) {
+    return (
+        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] border-2 border-dashed border-gray-300 bg-gray-50/50">
+            <CardContent className="flex flex-col items-center justify-center h-full min-h-[300px] p-6">
+                <div className="text-center space-y-4">
+                    <div className="mx-auto p-3 bg-blue-100 rounded-full">
+                        <Plus className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Add New Address</h3>
+                    <p className="text-gray-600 text-sm">Create a new shipping address for your orders</p>
+                </div>
+            </CardContent>
+            <CardFooter className="border-t bg-white p-4">
+                <Button
+                    onClick={onClick}
+                    className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Address
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+}
+
+// Simplified AddressCard Component for Grid Display
 function AddressCard({
     address,
     isDefault,
     onSetDefault,
     onEdit,
-    isEditing,
-    onSubmit,
-    register,
-    errors,
-    isDirty,
     isSubmitting,
 }: {
     address: Address;
     isDefault: boolean;
-    onSetDefault?: () => void;
+    onSetDefault: () => void;
     onEdit: () => void;
-    isEditing: boolean;
-    onSubmit: (e: React.FormEvent) => void;
-    register: any;
-    errors: any;
-    isDirty: boolean;
     isSubmitting: boolean;
 }) {
     return (
-        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="bg-gray-50 border-b">
-                <div className="flex justify-between items-center">
+        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+                <div className="flex justify-between items-start">
                     <CardTitle className="text-lg font-medium flex items-center space-x-2">
                         <MapPin className="w-4 h-4 text-gray-600" />
-                        <span>{address.firstName} {address.lastName}</span>
+                        <span className="truncate">{address.firstName} {address.lastName}</span>
                     </CardTitle>
-                    {isDefault && <Badge variant="secondary" className="bg-green-100 text-green-700">Default</Badge>}
+                    {isDefault && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 shrink-0">
+                            <Home className="w-3 h-3 mr-1" />
+                            Default
+                        </Badge>
+                    )}
                 </div>
             </CardHeader>
+
             <CardContent className="pt-4 space-y-2">
-                {!isEditing ? (
-                    <>
-                        <p className="font-medium">{address.address1}</p>
-                        {address.address2 && <p>{address.address2}</p>}
-                        <p>{address.city}, {address.province} {address.zip}</p>
-                        <p>{address.country}</p>
-                        {address.company && <p className="flex items-center space-x-1"><Building2 className="w-4 h-4" /> {address.company}</p>}
-                        {address.phone && <p className="flex items-center space-x-1"><Phone className="w-4 h-4" /> {address.phone}</p>}
-                    </>
-                ) : (
-                    <form onSubmit={onSubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="firstName">First Name *</Label>
-                                <Input id="firstName" {...register('firstName', { required: 'First name is required' })} />
-                                {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName.message}</p>}
-                            </div>
-                            <div>
-                                <Label htmlFor="lastName">Last Name *</Label>
-                                <Input id="lastName" {...register('lastName', { required: 'Last name is required' })} />
-                                {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName.message}</p>}
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="phone">Phone *</Label>
-                            <Input id="phone" {...register('phone', { required: 'Phone number is required' })} />
-                            {errors.phone && <p className="text-red-500 text-xs">{errors.phone.message}</p>}
-                        </div>
-                        <div>
-                            <Label htmlFor="address1">Street Address *</Label>
-                            <Input id="address1" {...register('address1', { required: 'Street address is required' })} />
-                            {errors.address1 && <p className="text-red-500 text-xs">{errors.address1.message}</p>}
-                        </div>
-                        <div>
-                            <Label htmlFor="address2">Apartment/Suite</Label>
-                            <Input id="address2" {...register('address2')} />
-                        </div>
-                        <div>
-                            <Label htmlFor="city">City *</Label>
-                            <Input id="city" {...register('city', { required: 'City is required' })} />
-                            {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="province">State/Province *</Label>
-                                <Input id="province" {...register('province', { required: 'State/Province is required' })} />
-                                {errors.province && <p className="text-red-500 text-xs">{errors.province.message}</p>}
-                            </div>
-                            <div>
-                                <Label htmlFor="zip">Postal Code *</Label>
-                                <Input id="zip" {...register('zip', { required: 'Postal code is required' })} />
-                                {errors.zip && <p className="text-red-500 text-xs">{errors.zip.message}</p>}
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="country">Country *</Label>
-                            <Input id="country" {...register('country', { required: 'Country is required' })} />
-                            {errors.country && <p className="text-red-500 text-xs">{errors.country.message}</p>}
-                        </div>
-                        <div>
-                            <Label htmlFor="company">Company</Label>
-                            <Input id="company" {...register('company')} />
-                        </div>
-                        <Button
-                            type="submit"
-                            disabled={isSubmitting || !isDirty}
-                            className="w-full"
-                        >
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                        </Button>
-                    </form>
-                )}
+                <p className="font-medium text-gray-900">{address.address1}</p>
+                {address.address2 && <p className="text-gray-700">{address.address2}</p>}
+                <p className="text-gray-700">{address.city}, {address.province} {address.zip}</p>
+                <p className="text-gray-600">{address.country}</p>
+
+                <div className="pt-2 space-y-1">
+                    {address.company && (
+                        <p className="flex items-center space-x-1 text-sm text-gray-600">
+                            <Building2 className="w-3 h-3" />
+                            <span>{address.company}</span>
+                        </p>
+                    )}
+                    {address.phone && (
+                        <p className="flex items-center space-x-1 text-sm text-gray-600">
+                            <Phone className="w-3 h-3" />
+                            <span>{address.phone}</span>
+                        </p>
+                    )}
+                </div>
             </CardContent>
-            <CardFooter className="border-t pt-4 flex justify-between">
-                {!isEditing && (
-                    <>
-                        <Button variant="outline" onClick={onEdit}>
-                            <Edit className="w-4 h-4 mr-2" /> Edit
-                        </Button>
-                        {!isDefault && onSetDefault && (
-                            <Button variant="secondary" onClick={onSetDefault}>
-                                <Check className="w-4 h-4 mr-2" /> Set as Default
-                            </Button>
+
+            <CardFooter className="border-t bg-gray-50/50 pt-4 flex justify-between gap-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onEdit}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                >
+                    <Edit className="w-4 h-4 mr-1" /> Edit
+                </Button>
+
+                {!isDefault && (
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={onSetDefault}
+                        disabled={isSubmitting}
+                        className="flex-1"
+                    >
+                        {isSubmitting ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                        ) : (
+                            <Check className="w-4 h-4 mr-1" />
                         )}
-                    </>
+                        Set Default
+                    </Button>
                 )}
             </CardFooter>
         </Card>
