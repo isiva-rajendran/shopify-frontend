@@ -772,8 +772,8 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
 // Add Address Card Component
 function AddAddressCard({ onClick }: { onClick: () => void }) {
     return (
-        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] border-2 border-dashed border-gray-300 bg-gray-50/50">
-            <CardContent className="flex flex-col items-center justify-center h-full min-h-[300px] p-6">
+        <Card className="overflow-hidden pt-0 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] border-2 border-dashed border-gray-300 bg-gray-50/50">
+            <CardContent className="flex flex-col items-center justify-center h-full  p-6">
                 <div className="text-center space-y-4">
                     <div className="mx-auto p-3 bg-blue-100 rounded-full">
                         <Plus className="w-8 h-8 text-blue-600" />
@@ -810,9 +810,9 @@ function AddressCard({
     isSubmitting: boolean;
 }) {
     return (
-        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
-            <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
-                <div className="flex justify-between items-start">
+        <Card className="overflow-hidden pt-0 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b [.border-b]:pb-2 py-2">
+                <div className="flex justify-between items-center">
                     <CardTitle className="text-lg font-medium flex items-center space-x-2">
                         <MapPin className="w-4 h-4 text-gray-600" />
                         <span className="truncate">{address.firstName} {address.lastName}</span>
@@ -826,7 +826,7 @@ function AddressCard({
                 </div>
             </CardHeader>
 
-            <CardContent className="pt-4 space-y-2">
+            <CardContent className="space-y-2">
                 <p className="font-medium text-gray-900">{address.address1}</p>
                 {address.address2 && <p className="text-gray-700">{address.address2}</p>}
                 <p className="text-gray-700">{address.city}, {address.province} {address.zip}</p>

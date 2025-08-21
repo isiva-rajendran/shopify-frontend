@@ -33,6 +33,8 @@ interface CustomerAddressUpdateResponse {
   };
 }
 
+
+
 export async function updateCustomerAddress(
   addressId: string,
   address: AddressInput
@@ -108,13 +110,40 @@ export async function updateCustomerAddress(
   return { success: true };
 }
 
+interface CustomerAddressCreateVariables {
+  customerAccessToken: string;
+  address: AddressInput;
+}
+
+interface CustomerAddressCreateResponse {
+  customerAddressCreate?: {
+    customerAddress?: {
+      id: string;
+      address1: string;
+      address2: string | null;
+      city: string;
+      company: string | null;
+      country: string;
+      firstName: string | null;
+      lastName: string | null;
+      phone: string | null;
+      province: string;
+      zip: string;
+    };
+    customerUserErrors: Array<{
+      code: string;
+      field: string[];
+      message: string;
+    }>;
+  };
+}
+
 export async function createCustomerAddress(
-  addressId: string,
   address: AddressInput
 ): Promise<{ success: boolean; errors?: { code: string; field: string; message: string }[] }> {
   const customerAccessToken = (await cookies()).get('shopify_access_token')?.value;
 
-  if (!customerAccessToken || !addressId) {
+  if (!customerAccessToken) {
     return {
       success: false,
       errors: [{ code: 'MISSING_INPUT', field: '', message: 'Missing customer access token or address ID' }],
@@ -122,12 +151,12 @@ export async function createCustomerAddress(
   }
 
   const res = await shopifyFetch<{
-    variables: CustomerAddressUpdateVariables;
-    data: CustomerAddressUpdateResponse;
+    variables: CustomerAddressCreateVariables;
+    data: CustomerAddressCreateResponse;
   }>({
     query: `
-      mutation customerAddressUpdate($customerAccessToken: String!, $id: ID!, $address: MailingAddressInput!) {
-        customerAddressUpdate(customerAccessToken: $customerAccessToken, id: $id, address: $address) {
+      mutation customerAddressCreate($customerAccessToken: String!, $address: MailingAddressInput!) {
+        customerAddressCreate(customerAccessToken: $customerAccessToken, address: $address) {
           customerAddress {
             id
             address1
@@ -151,12 +180,11 @@ export async function createCustomerAddress(
     `,
     variables: {
       customerAccessToken,
-      id: addressId,
       address,
     },
   });
 
-  const result = res.body.data?.customerAddressUpdate;
+  const result = res.body.data?.customerAddressCreate;
 
   if (!result) {
     return { success: false, errors: [{ code: 'NO_RESULT', field: '', message: 'Mutation returned no result' }] };
