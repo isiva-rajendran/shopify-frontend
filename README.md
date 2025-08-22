@@ -1,3 +1,77 @@
+🛒 Shopify + Next.js Commerce Setup Guide
+
+This project is built on Next.js Commerce (by Vercel), serving as an alternative to Shopify Hydrogen for headless storefronts.
+
+1. Create a Shopify Partner Account
+
+Sign up at Shopify Partners
+.
+
+This gives access to create Development Stores for testing.
+
+2. Create a Development Store
+
+From the Partner dashboard, create a Development Store.
+
+The dev store comes preloaded with mock/sample data for testing storefront APIs.
+
+3. Create a Headless App in Shopify
+
+Log in to the Shopify Admin of your dev store.
+
+Under Sales Channels, click Headless → create a new headless app.
+
+4. Generate a Storefront API Token
+
+Inside the headless app, create a Storefront API configuration.
+
+Copy the Public Storefront Access Token.
+
+This token is used on the frontend for fetching products, collections, and checkout data.
+
+Example (Next.js .env.local)
+SHOPIFY_STORE_DOMAIN=my-dev-store.myshopify.com
+SHOPIFY_STOREFRONT_ACCESS_TOKEN=your_storefront_access_token
+
+5. Get Store Domain
+
+In Shopify Admin → Settings → find your Store Domain (e.g., my-dev-store.myshopify.com).
+
+Add this domain to your frontend configuration.
+
+6. (Optional) Admin API for Backend Integrations
+
+If your app needs admin-level access (e.g., order management, reviews, product sync), you need an Admin API token.
+
+Go to: Settings → Apps and Sales Channels → Develop Apps.
+
+Create a Custom App.
+
+Assign Admin API permissions as required.
+
+Copy the Admin API credentials:
+
+Admin Access Token
+
+API Key
+
+API Secret
+
+Example (Backend .env)
+
+COMPANY_NAME="Shop Easy StoreFront"
+SITE_NAME="Shop Easy"
+SHOPIFY_REVALIDATION_SECRET=""
+SHOPIFY_STOREFRONT_ACCESS_TOKEN="450948518abe57f296160df3df45a4d1"
+SHOPIFY_STORE_DOMAIN="store-front-test-shop.myshopify.com"
+NEXT_PUBLIC_RETURN_URL="http://localhost:3000/"
+NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN="450948518abe57f296160df3df45a4d1"
+
+
+dev store password: yimpah
+
+
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fcommerce&project-name=commerce&repo-name=commerce&demo-title=Next.js%20Commerce&demo-url=https%3A%2F%2Fdemo.vercel.store&demo-image=https%3A%2F%2Fbigcommerce-demo-asset-ksvtgfvnd.vercel.app%2Fbigcommerce.png&env=COMPANY_NAME,SHOPIFY_REVALIDATION_SECRET,SHOPIFY_STORE_DOMAIN,SHOPIFY_STOREFRONT_ACCESS_TOKEN,SITE_NAME)
 
 # Next.js Commerce

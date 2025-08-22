@@ -113,7 +113,7 @@ export async function redirectToCheckout() {
     }
 
     // 4. Add return_to parameter to redirect to localhost:3000 after checkout
-    const returnUrl = "http://localhost:3000/checkout/success?order_id={checkout_order_id}";
+    const returnUrl = "https://www.youtube.com/success?order_id={checkout_order_id}";
     const checkoutUrlWithRedirect = `${checkoutUrl}?return_to=${encodeURIComponent(returnUrl)}`;
 
     // 5. Redirect to checkout with return parameter
