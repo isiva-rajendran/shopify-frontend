@@ -266,11 +266,6 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
                             </div>
                             <span>Edit Address</span>
                         </DialogTitle>
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="sm" className="absolute right-4 top-4 hover:bg-gray-100">
-                                <X className="w-4 h-4" />
-                            </Button>
-                        </DialogClose>
                     </DialogHeader>
 
                     <div className="overflow-y-auto max-h-[60vh] px-1">
@@ -521,11 +516,6 @@ export default function AddressesManager({ customer }: { customer: Customer }) {
                             </div>
                             <span>Add New Address</span>
                         </DialogTitle>
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="sm" className="absolute right-4 top-4 hover:bg-gray-100">
-                                <X className="w-4 h-4" />
-                            </Button>
-                        </DialogClose>
                     </DialogHeader>
 
                     <div className="overflow-y-auto max-h-[60vh] px-1">
