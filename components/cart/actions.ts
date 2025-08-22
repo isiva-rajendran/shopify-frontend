@@ -103,7 +103,7 @@ export async function redirectToCheckout() {
     if (!cart) throw new Error("No cart found");
 
     // 2. Get customer token if logged in
-    const customerAccessToken = ( await cookies()).get('shopify_access_token')?.value;
+    const customerAccessToken = (await cookies()).get('shopify_access_token')?.value;
 
     // 3. Associate customer if logged in
     let checkoutUrl = cart.checkoutUrl;
@@ -112,13 +112,16 @@ export async function redirectToCheckout() {
       checkoutUrl = updatedCart.checkoutUrl;
     }
 
-    // 4. Redirect to checkout
-    redirect(checkoutUrl);
+    // 4. Add return_to parameter to redirect to localhost:3000 after checkout
+    const returnUrl = "http://localhost:3000/checkout/success?order_id={checkout_order_id}";
+    const checkoutUrlWithRedirect = `${checkoutUrl}?return_to=${encodeURIComponent(returnUrl)}`;
+
+    // 5. Redirect to checkout with return parameter
+    redirect(checkoutUrlWithRedirect);
     
   } catch (error) {
     console.error("Checkout redirect failed:", error);
-    // Handle errors (e.g., show toast message)
-    throw error; // Re-throw if you want calling code to handle it
+    throw error;
   }
 }
 
